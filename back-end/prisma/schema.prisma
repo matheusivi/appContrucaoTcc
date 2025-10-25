@@ -1,0 +1,172 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model cotacoes {
+  id            Int          @id @default(autoincrement())
+  produto_id    Int
+  fornecedor_id Int
+  preco         Decimal      @db.Decimal(10, 2)
+  data_cotacao  DateTime?    @default(now()) @db.Timestamp(6)
+  fornecedores  fornecedores @relation(fields: [fornecedor_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  produtos      produtos     @relation(fields: [produto_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model entradas {
+  id             Int          @id @default(autoincrement())
+  produto_id     Int
+  fornecedor_id  Int
+  quantidade     Int
+  preco_unitario Decimal      @db.Decimal(10, 2)
+  data_entrada   DateTime?    @default(now()) @db.Timestamp(6)
+  usuario_id     Int
+  obra_id        Int?
+  nota_fiscal    String?      @db.VarChar(50)
+  fornecedores   fornecedores @relation(fields: [fornecedor_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  obras          obras?       @relation(fields: [obra_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  produtos       produtos     @relation(fields: [produto_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  usuarios       usuarios     @relation(fields: [usuario_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model estoque_por_obra {
+  id         Int      @id @default(autoincrement())
+  obra_id    Int
+  produto_id Int
+  quantidade Int      @default(0)
+  obras      obras    @relation(fields: [obra_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  produtos   produtos @relation(fields: [produto_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([obra_id, produto_id])
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model fases {
+  id                   Int       @id @default(autoincrement())
+  obra_id              Int
+  nome                 String    @db.VarChar(255)
+  data_inicio          DateTime  @db.Date
+  data_fim_prevista    DateTime  @db.Date
+  data_fim_real        DateTime? @db.Date
+  percentual_concluido Int?      @default(0)
+  peso                 Int?      @default(1)
+  obras                obras     @relation(fields: [obra_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model fornecedores {
+  id                Int        @id @default(autoincrement())
+  nome              String     @db.VarChar(100)
+  cnpj              String     @unique @db.VarChar(20)
+  endereco          String?
+  telefone          String?    @db.VarChar(20)
+  email             String?    @db.VarChar(100)
+  contato_principal String?    @db.VarChar(100)
+  cotacoes          cotacoes[]
+  entradas          entradas[]
+}
+
+model historico_alteracoes {
+  id              Int       @id @default(autoincrement())
+  tabela_alterada String    @db.VarChar(50)
+  registro_id     Int
+  campo_alterado  String    @db.VarChar(50)
+  valor_antigo    String?
+  valor_novo      String?
+  usuario_id      Int
+  data_alteracao  DateTime? @default(now()) @db.Timestamp(6)
+  usuarios        usuarios  @relation(fields: [usuario_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model obras {
+  id                                                   Int                 @id @default(autoincrement())
+  nome                                                 String              @db.VarChar(100)
+  endereco                                             String?
+  data_inicio                                          DateTime            @db.Date
+  data_fim_prevista                                    DateTime            @db.Date
+  responsavel_id                                       Int
+  status                                               String              @default("ativa") @db.VarChar(20)
+  foto_url                                             String?             @db.VarChar(255)
+  entradas                                             entradas[]
+  estoque_por_obra                                     estoque_por_obra[]
+  fases                                                fases[]
+  usuarios                                             usuarios            @relation(fields: [responsavel_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  orcamento_por_obra                                   orcamento_por_obra?
+  saidas                                               saidas[]
+  transferencias_transferencias_destino_obra_idToobras transferencias[]    @relation("transferencias_destino_obra_idToobras")
+  transferencias_transferencias_origem_obra_idToobras  transferencias[]    @relation("transferencias_origem_obra_idToobras")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model orcamento_por_obra {
+  id           Int       @id @default(autoincrement())
+  obra_id      Int       @unique
+  valor_orcado Decimal   @db.Decimal(12, 2)
+  data_criacao DateTime? @default(now()) @db.Timestamp(6)
+  obras        obras     @relation(fields: [obra_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model produtos {
+  id               Int                @id @default(autoincrement())
+  nome             String             @db.VarChar(100)
+  descricao        String?
+  unidade_medida   String             @db.VarChar(20)
+  quantidade_atual Int                @default(0)
+  cotacoes         cotacoes[]
+  entradas         entradas[]
+  estoque_por_obra estoque_por_obra[]
+  saidas           saidas[]
+  transferencias   transferencias[]
+}
+
+/// Esta tabela contém restrições de verificação e requer configuração adicional para migrações. Visite https://pris.ly/d/check-constraints para mais informações.
+model saidas {
+  id         Int       @id @default(autoincrement())
+  produto_id Int
+  quantidade Int
+  data_saida DateTime? @default(now()) @db.Timestamp(6)
+  obra_id    Int?
+  usuario_id Int
+  obras      obras?    @relation(fields: [obra_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  produtos   produtos  @relation(fields: [produto_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  usuarios   usuarios  @relation(fields: [usuario_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model transferencias {
+  id                                          Int       @id @default(autoincrement())
+  produto_id                                  Int
+  quantidade                                  Int
+  origem_obra_id                              Int?
+  destino_obra_id                             Int?
+  data_transferencia                          DateTime? @default(now()) @db.Timestamp(6)
+  usuario_id                                  Int
+  obras_transferencias_destino_obra_idToobras obras?    @relation("transferencias_destino_obra_idToobras", fields: [destino_obra_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  obras_transferencias_origem_obra_idToobras  obras?    @relation("transferencias_origem_obra_idToobras", fields: [origem_obra_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  produtos                                    produtos  @relation(fields: [produto_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  usuarios                                    usuarios  @relation(fields: [usuario_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model usuarios {
+  id                   Int                    @id @default(autoincrement())
+  nome                 String                 @db.VarChar(100)
+  email                String                 @unique @db.VarChar(100)
+  senha                String                 @db.VarChar(255)
+  cargo                String                 @default("usuário") @db.VarChar(50)
+  nivel_acesso         String                 @default("normal") @db.VarChar(10)
+  data_criacao         DateTime?              @default(now()) @db.Timestamp(6)
+  ultimo_login         DateTime?              @db.Timestamp(6)
+  entradas             entradas[]
+  historico_alteracoes historico_alteracoes[]
+  obras                obras[]
+  saidas               saidas[]
+  transferencias       transferencias[]
+}
