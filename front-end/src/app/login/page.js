@@ -132,7 +132,7 @@ const handleSubmit = async (e) => {
             <div className="flex items-center justify-end">
               <div className="text-sm">
                 <Link
-                  href="/forgot-password"
+                  href="/recuperar-senha"
                   className="font-medium text-[#ea2a33] hover:text-[#c0262d]"
                 >
                   Esqueceu sua senha?

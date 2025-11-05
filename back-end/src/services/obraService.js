@@ -8,17 +8,19 @@ async function criarObras(data, usuarioId) {
   const usuario = await prisma.usuarios.findUnique({ where: { id: usuarioId } });
   if (!usuario) throw new Error("Responsável não encontrado");
 
-  return await prisma.obras.create({
-    data: {
-      nome,
-      endereco,
-      data_inicio: new Date(data_inicio),
-      data_fim_prevista: data_fim_prevista ? new Date(data_fim_prevista) : null,
-      responsavel_id: usuarioId,   // 🔴 aqui entra o logado, não do body
-      status: status || "ativa",
-      foto_url,
+ return await prisma.obras.create({
+  data: {
+    nome,
+    endereco,
+    data_inicio: new Date(data_inicio),
+    data_fim_prevista: data_fim_prevista ? new Date(data_fim_prevista) : null,
+    status: status || "ativa",
+    foto_url,
+    usuarios: {
+      connect: { id: usuarioId },
     },
-  });
+  },
+});
 }
 
 

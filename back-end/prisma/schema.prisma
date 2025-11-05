@@ -89,7 +89,7 @@ model obras {
   nome                                                 String              @db.VarChar(100)
   endereco                                             String?
   data_inicio                                          DateTime            @db.Date
-  data_fim_prevista                                    DateTime            @db.Date
+  data_fim_prevista                                    DateTime?             @db.Date
   responsavel_id                                       Int
   status                                               String              @default("ativa") @db.VarChar(20)
   foto_url                                             String?             @db.VarChar(255)
