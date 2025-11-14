@@ -7,11 +7,13 @@ async function registrarAlteracao({
   campo,
   valorAntigo,
   valorNovo,
-  usuarioId, // Ajustado para usuarioId, sem alias
+  usuarioId,
+  usuario_id, // aceita os dois formatos
 }) {
-  console.log("Usuario ID recebido:", usuarioId);
-  if (!usuarioId) {
-    throw new Error('usuarioId é undefined. Verifique o valor passado.');
+  const userId = usuarioId || usuario_id; // prioriza o camelCase se ambos existirem
+
+  if (!userId) {
+    throw new Error('Nenhum identificador de usuário foi fornecido (usuarioId ou usuario_id).');
   }
 
   await prisma.historico_alteracoes.create({
@@ -22,7 +24,7 @@ async function registrarAlteracao({
       valor_antigo: valorAntigo ? String(valorAntigo) : null,
       valor_novo: valorNovo ? String(valorNovo) : null,
       usuarios: {
-        connect: { id: usuarioId },
+        connect: { id: userId },
       },
     },
   });

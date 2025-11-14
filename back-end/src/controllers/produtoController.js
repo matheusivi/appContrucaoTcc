@@ -1,8 +1,17 @@
-const { criarProdutos, atualizarProdutos, buscarProdutosPorId, listarProdutos, excluirProdutos } = require('../services/produtoService');
+const {
+  criarProdutos,
+  atualizarProdutos,
+  buscarProdutosPorId,
+  listarProdutos,
+  excluirProdutos,
+} = require('../services/produtoService');
 
 async function criarProduto(req, res) {
+ 
+
+  console.log('🧠 req.user recebido no controller:', req.user);
   try {
-    const usuarioId = req.user?.usuarioId;
+    const usuarioId = req.user?.usuario_id;
     if (!usuarioId) {
       throw new Error('usuarioId não encontrado em req.user');
     }
@@ -34,7 +43,7 @@ async function listarProdutosPorId(req, res) {
 
 async function atualizarProdutosControllers(req, res) {
   try {
-    const usuarioId = req.user?.usuarioId;
+    const usuarioId = req.user?.usuario_id;
     if (!usuarioId) {
       throw new Error('usuarioId não encontrado em req.user');
     }
@@ -48,7 +57,7 @@ async function atualizarProdutosControllers(req, res) {
 
 async function deletarProdutos(req, res) {
   try {
-    const usuarioId = req.user?.usuarioId;
+    const usuarioId = req.user?.usuario_id;
     if (!usuarioId) {
       throw new Error('usuarioId não encontrado em req.user');
     }

@@ -1,44 +1,31 @@
 'use client';
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { jwtDecode } from 'jwt-decode';
 
-
-export default function Home() {
+export default function useAuth() {
   const router = useRouter();
 
   useEffect(() => {
     const token = localStorage.getItem('token');
 
     if (!token) {
-      // 🔸 Sem token → vai para login
       router.replace('/login');
       return;
     }
 
     try {
-      const decoded = jwtDecode(token);
-      const now = Date.now() / 1000; // tempo atual em segundos
+      const decoded = JSON.parse(atob(token.split('.')[1]));
+      const now = Date.now() / 1000;
 
       if (decoded.exp && decoded.exp < now) {
-        // 🔸 Token expirado
         localStorage.removeItem('token');
         localStorage.removeItem('usuario');
         router.replace('/login');
-      } else {
-        // 🔹 Token válido → redireciona para obras
-        router.replace('/obras');
       }
-    } catch (err) {
-      // 🔸 Token inválido
+    } catch {
       localStorage.removeItem('token');
+      localStorage.removeItem('usuario');
       router.replace('/login');
     }
   }, [router]);
-
-  return (
-    <div className="flex items-center justify-center h-screen text-gray-700">
-      <p>Carregando...</p>
-    </div>
-  );
 }

@@ -7,7 +7,7 @@ const authMiddleware = require('../middlewares/authMiddleware');
 router.post('/entradas', authMiddleware, validateEntrada, async (req, res) => {
   console.log('Body recebido (POST):', req.body);
   try {
-    const usuarioId = req.user?.id;
+    const usuarioId = req.user?.usuario_id;
     if (!usuarioId || isNaN(usuarioId)) {
       return res.status(401).json({ error: 'Usuário ID deve ser um número inteiro' });
     }
@@ -22,7 +22,7 @@ router.post('/entradas', authMiddleware, validateEntrada, async (req, res) => {
 router.put('/entradas/:id', authMiddleware, validateEntrada, async (req, res) => {
   console.log('Body recebido (POT):', req.body);
   try {
-    const usuarioId = req.user?.id;
+    const usuarioId = req.user?.usuario_id;
     if (!usuarioId || isNaN(usuarioId)) {
       return res.status(401).json({ error: 'Usuário ID deve ser um número inteiro' });
     }

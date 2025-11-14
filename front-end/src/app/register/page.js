@@ -34,7 +34,7 @@ export default function RegisterPage() {
     setLoading(true);
     console.log('URL de API:', process.env.NEXT_PUBLIC_API_URL);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/registrar`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/registrar`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

@@ -43,7 +43,7 @@ export default function NovaObra() {
     });
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/obras`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/obras`, {
         method: "POST",
         body: data,
         headers: {
@@ -181,7 +181,7 @@ export default function NovaObra() {
                 className="h-12 px-6 rounded-md bg-gray-200 text-gray-800 font-semibold 
                   hover:bg-gray-300 transition-colors"
               >
-                Cancelar
+                Voltar
               </button>
               <button
                 type="submit"

@@ -3,7 +3,7 @@ const { criarEntrada, atualizarEntrada } = require('../services/entradaService')
 async function createEntrada(req, res) {
   try {
     if (!req.body) throw new Error('Corpo da requisição não fornecido');
-    const usuarioId = req.user?.usuarioId;
+    const usuarioId = req.user?.usuario_id;
     if (!usuarioId) {
       throw new Error('usuarioId não encontrado em req.user');
     }

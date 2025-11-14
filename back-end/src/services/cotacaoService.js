@@ -2,7 +2,7 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 const { registrarAlteracao } = require('./historicoService');
 
-async function criarCotacao(data, usuarioId) {
+async function criarCotacao(data, usuario_id) {
   const { produto_id, fornecedor_id, preco } = data;
 
   if (!produto_id || !fornecedor_id || preco === undefined) {
@@ -27,7 +27,7 @@ async function criarCotacao(data, usuarioId) {
   return novaCotacao;
 }
 
-async function atualizarCotacao(id, data, usuarioId) {
+async function atualizarCotacao(id, data, usuario_id) {
   const { preco } = data;
 
   const cotacao = await prisma.cotacoes.findUnique({ where: { id } });
@@ -43,7 +43,7 @@ async function atualizarCotacao(id, data, usuarioId) {
   return cotacaoAtualizada;
 }
 
-async function excluirCotacao(id, usuarioId) {
+async function excluirCotacao(id, usuario_id) {
   const cotacao = await prisma.cotacoes.findUnique({ where: { id } });
   if (!cotacao) throw new Error('Cotação não encontrada');
 

@@ -2,7 +2,7 @@ const { criarSaidas } = require("../services/saidaService");
 
 async function createSaida(req, res) {
   try {
-    const usuarioId = req.user?.id;
+    const usuarioId = req.user?.usuario_id;
     if (!usuarioId) {
       throw new Error('usuarioId não encontrado em req.user');
     }

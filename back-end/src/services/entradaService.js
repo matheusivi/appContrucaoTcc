@@ -2,39 +2,46 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 const { registrarAlteracao } = require('./historicoService');
 
-async function criarEntrada(data, usuarioId) {
+async function criarEntrada(data, usuario_id) {
   const { produto_id, quantidade, obra_id, preco_unitario, fornecedor_id, nota_fiscal } = data;
 
-  // Validação dos dados
-  if (!produto_id || !quantidade || !fornecedor_id || !usuarioId || preco_unitario === undefined) {
+  // Validação
+  if (!produto_id || !quantidade || !fornecedor_id || !usuario_id || preco_unitario === undefined) {
     throw new Error('produto_id, quantidade, fornecedor_id, usuario_id e preco_unitario são obrigatórios');
   }
-  if (isNaN(produto_id) || isNaN(quantidade) || isNaN(fornecedor_id) || isNaN(usuarioId)) {
+
+  if (
+    isNaN(produto_id) ||
+    isNaN(quantidade) ||
+    isNaN(fornecedor_id) ||
+    isNaN(usuario_id)
+  ) {
     throw new Error('produto_id, quantidade, fornecedor_id e usuario_id devem ser números inteiros');
   }
+
   if (obra_id !== undefined && isNaN(obra_id)) {
     throw new Error('obra_id deve ser um número inteiro');
   }
 
-  // Verifica se o produto existe
+  // Produto
   const produto = await prisma.produtos.findUnique({ where: { id: Number(produto_id) } });
   if (!produto) throw new Error('Produto não encontrado');
 
-  // Verifica se a obra existe (se fornecida)
+  // Obra (se fornecida)
   if (obra_id !== undefined) {
     const obra = await prisma.obras.findUnique({ where: { id: Number(obra_id) } });
     if (!obra) throw new Error('Obra não encontrada');
   }
 
-  // Verifica se o fornecedor existe
+  // Fornecedor
   const fornecedor = await prisma.fornecedores.findUnique({ where: { id: Number(fornecedor_id) } });
   if (!fornecedor) throw new Error('Fornecedor não encontrado');
 
-  // Verifica se o usuário existe
-  const usuario = await prisma.usuarios.findUnique({ where: { id: Number(usuarioId) } });
+  // Usuário
+  const usuario = await prisma.usuarios.findUnique({ where: { id: Number(usuario_id) } });
   if (!usuario) throw new Error('Usuário não encontrado');
 
-  // Cria a entrada
+  // Cria entrada
   const novaEntrada = await prisma.entradas.create({
     data: {
       produto_id: Number(produto_id),
@@ -43,29 +50,29 @@ async function criarEntrada(data, usuarioId) {
       data_entrada: new Date(),
       preco_unitario: Number(preco_unitario),
       fornecedor_id: Number(fornecedor_id),
-      usuario_id: Number(usuarioId),
+      usuario_id: Number(usuario_id),
       nota_fiscal: nota_fiscal || null,
     },
   });
 
-  // Atualiza quantidade_atual no produto (estoque geral da construtora)
+  // Atualiza estoque geral
   const novaQuantidadeAtual = produto.quantidade_atual + Number(quantidade);
   await prisma.produtos.update({
     where: { id: Number(produto_id) },
     data: { quantidade_atual: novaQuantidadeAtual },
   });
 
-  // Registra a alteração de quantidade_atual no histórico
+  // Registrar histórico
   await registrarAlteracao({
     tabela: 'produtos',
     registroId: Number(produto_id),
     campo: 'quantidade_atual',
     valorAntigo: produto.quantidade_atual,
     valorNovo: novaQuantidadeAtual,
-    usuarioId: Number(usuarioId),
+    usuarioId: Number(usuario_id),
   });
 
-  // Atualiza ou cria o registro em estoque_por_obra para a obra específica (se obra_id for fornecido)
+  // Atualiza estoque da obra (se tiver obra)
   if (obra_id !== undefined) {
     const estoqueExistente = await prisma.estoque_por_obra.findFirst({
       where: { produto_id: Number(produto_id), obra_id: Number(obra_id) },
@@ -90,62 +97,66 @@ async function criarEntrada(data, usuarioId) {
   return novaEntrada;
 }
 
-async function atualizarEntrada(id, data, usuarioId) {
+async function atualizarEntrada(id, data, usuario_id) {
   const { quantidade, obra_id, preco_unitario, fornecedor_id, nota_fiscal } = data;
 
-  // Busca a entrada existente
+  // Busca entrada
   const entrada = await prisma.entradas.findUnique({ where: { id: Number(id) } });
   if (!entrada) throw new Error('Entrada não encontrada');
 
-  // Busca o produto associado
+  // Produto
   const produto = await prisma.produtos.findUnique({ where: { id: entrada.produto_id } });
   if (!produto) throw new Error('Produto não encontrado');
 
-  // Valida fornecedor_id se fornecido
+  // Fornecedor
   if (fornecedor_id !== undefined) {
     if (isNaN(fornecedor_id)) {
       throw new Error('Fornecedor ID deve ser um número inteiro');
     }
+
     const fornecedor = await prisma.fornecedores.findUnique({ where: { id: Number(fornecedor_id) } });
     if (!fornecedor) throw new Error('Fornecedor não encontrado');
   }
 
-  // Valida obra_id se fornecido
+  // Obra
   if (obra_id !== undefined && isNaN(obra_id)) {
     throw new Error('Obra ID deve ser um número inteiro');
   }
+
   if (obra_id !== undefined) {
     const obra = await prisma.obras.findUnique({ where: { id: Number(obra_id) } });
     if (!obra) throw new Error('Obra não encontrada');
   }
 
-  // Calcula a diferença na quantidade (se fornecida)
+  // Atualização da quantidade
   let novaQuantidadeAtual = produto.quantidade_atual;
+
   if (quantidade !== undefined && Number(quantidade) !== entrada.quantidade) {
     const diferenca = Number(quantidade) - entrada.quantidade;
     novaQuantidadeAtual = produto.quantidade_atual + diferenca;
 
-    // Atualiza quantidade_atual no produto
+    // Atualiza produto
     await prisma.produtos.update({
       where: { id: entrada.produto_id },
       data: { quantidade_atual: novaQuantidadeAtual },
     });
 
-    // Registra a alteração no histórico
+    // Registra histórico
     await registrarAlteracao({
       tabela: 'produtos',
       registroId: entrada.produto_id,
       campo: 'quantidade_atual',
       valorAntigo: produto.quantidade_atual,
       valorNovo: novaQuantidadeAtual,
-      usuarioId: Number(usuarioId),
+      usuarioId: Number(usuario_id),
     });
 
-    // Atualiza o estoque_por_obra (para a obra original)
+    // Estoque da obra original
     if (entrada.obra_id) {
       const estoque = await prisma.estoque_por_obra.findFirst({
         where: { produto_id: entrada.produto_id, obra_id: entrada.obra_id },
       });
+
       if (estoque) {
         await prisma.estoque_por_obra.update({
           where: { id: estoque.id },
@@ -155,7 +166,7 @@ async function atualizarEntrada(id, data, usuarioId) {
     }
   }
 
-  // Atualiza a entrada
+  // Atualiza entrada
   const entradaAtualizada = await prisma.entradas.update({
     where: { id: Number(id) },
     data: {
@@ -163,18 +174,19 @@ async function atualizarEntrada(id, data, usuarioId) {
       obra_id: obra_id !== undefined ? Number(obra_id) : entrada.obra_id,
       preco_unitario: preco_unitario !== undefined ? Number(preco_unitario) : entrada.preco_unitario,
       fornecedor_id: fornecedor_id !== undefined ? Number(fornecedor_id) : entrada.fornecedor_id,
-      usuario_id: Number(usuarioId),
+      usuario_id: Number(usuario_id),
       nota_fiscal: nota_fiscal !== undefined ? nota_fiscal : entrada.nota_fiscal,
     },
   });
 
-  // Se a obra foi alterada, ajusta o estoque_por_obra
+  // Ajuste se mudou de obra
   if (obra_id !== undefined && Number(obra_id) !== entrada.obra_id) {
-    // Remove a quantidade da obra antiga (se existia)
+    // Remove da obra antiga
     if (entrada.obra_id) {
       const estoqueAntigo = await prisma.estoque_por_obra.findFirst({
         where: { produto_id: entrada.produto_id, obra_id: entrada.obra_id },
       });
+
       if (estoqueAntigo) {
         await prisma.estoque_por_obra.update({
           where: { id: estoqueAntigo.id },
@@ -183,10 +195,11 @@ async function atualizarEntrada(id, data, usuarioId) {
       }
     }
 
-    // Adiciona à nova obra
+    // Adiciona na nova
     const estoqueNovo = await prisma.estoque_por_obra.findFirst({
       where: { produto_id: entrada.produto_id, obra_id: Number(obra_id) },
     });
+
     if (estoqueNovo) {
       await prisma.estoque_por_obra.update({
         where: { id: estoqueNovo.id },

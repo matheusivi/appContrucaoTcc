@@ -1,31 +1,38 @@
-const jwt = require("jsonwebtoken");
-const { jwtSecret } = require("../../config");
+const jwt = require('jsonwebtoken');
+const { jwtSecret } = require('../../config');
 
 function authMiddleware(req, res, next) {
-  const authHeader = req.header("Authorization");
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return res.status(401).json({ error: "Token não fornecido ou inválido" });
+  console.log('🚪 Requisição recebida em:', req.originalUrl);
+  const authHeader = req.header('Authorization');
+
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Token não fornecido ou inválido' });
   }
 
-  const token = authHeader.replace("Bearer ", "");
+  const token = authHeader.replace('Bearer ', '');
+
   try {
     const decoded = jwt.verify(token, jwtSecret);
 
-   console.log("🔓 Token decodificado:", JSON.stringify(decoded, null, 2));
+    // ✅ Aceita diferentes formatos vindos do token
+    const usuario_id = decoded.usuario_id || decoded.usuarioId || decoded.id;
 
-    console.log("🔑 jwtSecret usado:", jwtSecret);
-
-    if (!decoded.usuario_id || isNaN(decoded.usuario_id)) {
+    if (!usuario_id || isNaN(usuario_id)) {
       return res
         .status(401)
-        .json({ error: "Token inválido: ID do usuário ausente ou inválido" });
+        .json({ error: 'Token inválido: ID do usuário ausente ou inválido' });
     }
-    req.user = {
-      usuario_id: Number(decoded.usuario_id),
-    };
+
+    // ✅ Padronização global (snake_case)
+    req.user = { usuario_id: Number(usuario_id) };
+
+    console.log('🔍 Token decodificado:', decoded);
+    console.log('👤 req.user:', req.user);
+
     next();
   } catch (error) {
-    res.status(401).json({ error: "Token inválido" });
+    console.error('❌ Erro ao verificar token:', error.message);
+    res.status(401).json({ error: 'Token inválido' });
   }
 }
 

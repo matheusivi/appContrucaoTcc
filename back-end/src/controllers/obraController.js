@@ -11,9 +11,7 @@ const {
 async function criarObrasControllers(req, res) {
   try {
     const usuarioId = req.user?.usuario_id;
-    console.log("🔥 Iniciando criação de obra...");
-    console.log("📦 req.body:", req.body);
-    console.log("📷 req.file:", req.file);
+   
 
     if (!usuarioId) {
       return res.status(401).json({ error: "Usuário não autenticado." });
@@ -23,7 +21,7 @@ async function criarObrasControllers(req, res) {
     let foto_url = null;
     if (req.file) {
       foto_url = `/uploads/obras/${req.file.filename}`;
-      console.log("📸 Caminho da foto salvo:", foto_url);
+    
     }
 
     const novaObra = {
@@ -34,7 +32,7 @@ async function criarObrasControllers(req, res) {
     };
 
     const obraCriada = await criarObras(novaObra, usuarioId);
-    console.log("✅ Obra criada:", obraCriada);
+   
 
     res.status(201).json(obraCriada);
   } catch (error) {
