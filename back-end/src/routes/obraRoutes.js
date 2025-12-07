@@ -15,7 +15,13 @@ router.post(
 
 router.get("/obras", obraController.listarObrasController);
 router.get("/obras/:id", obraController.listarObraPorId);
-router.put("/obras/:id", verificarToken, obraController.atualizarObrasController);
+router.put(
+  "/obras/:id",
+  verificarToken,
+  upload.single("foto"),   // 👈 AGORA SIM!!!
+  obraController.atualizarObrasController
+);
+
 router.delete("/obras/:id", verificarToken, obraController.excluirObrasController);
 
 module.exports = router;

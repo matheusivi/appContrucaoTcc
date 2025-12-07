@@ -1,0 +1,41 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_USER: matheus
+      POSTGRES_PASSWORD: 12345678
+      POSTGRES_DB: construtora
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  backend:
+    build: ./back-end
+    restart: always
+    depends_on:
+      - postgres
+    environment:
+      DATABASE_URL: "postgresql://postgres:12345678@localhost:5440/construtora?schema=public"
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./back-end:/app
+
+  frontend:
+    build: ./front-end
+    restart: always
+    depends_on:
+      - backend
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: "http://localhost:5000"
+    volumes:
+      - ./front-end:/app
+
+volumes:
+  pgdata:

@@ -39,6 +39,7 @@ const produtosRoutes = require('./routes/produtoRoutes');
 const fornecedoresRoutes = require('./routes/fornecedorRoutes');
 const obrasRoutes = require('./routes/obraRoutes');
 const estoquePorObraRoutes = require('./routes/estoquePorObraRoutes');
+const relatorioRoutes = require('./routes/relatorioRoutes');
 
 app.use('/api', cotacoesRoutes);
 app.use('/api', entradasRoutes);
@@ -51,7 +52,7 @@ app.use('/api', produtosRoutes);
 app.use('/api', fornecedoresRoutes);
 app.use('/api', obrasRoutes);
 app.use('/api', estoquePorObraRoutes);
-
+app.use('/api', relatorioRoutes);
 
 
 const PORT = process.env.PORT || 5000;

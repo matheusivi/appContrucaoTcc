@@ -62,20 +62,35 @@ async function listarObraPorId(req, res) {
 
 async function atualizarObrasController(req, res) {
   try {
-    const usuarioId = req.user?.usuarioId;
+    const usuarioId = req.user?.usuario_id;
     if (!usuarioId) throw new Error("usuarioId não encontrado em req.user");
 
     const { id } = req.params;
-    const obra = await atualizarObras(parseInt(id), req.body, usuarioId);
+
+    let foto_url = undefined;
+    if (req.file) {
+      foto_url = `/uploads/obras/${req.file.filename}`;
+    }
+
+    const data = {
+      nome: req.body.nome,
+      endereco: req.body.endereco,
+      data_inicio: req.body.data_inicio,
+      foto_url,
+    };
+
+    const obra = await atualizarObras(parseInt(id), data);
     res.status(200).json(obra);
+
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
 }
 
+
 async function excluirObrasController(req, res) {
   try {
-    const usuarioId = req.user?.usuarioId;
+    const usuarioId = req.user?.usuario_id;
     if (!usuarioId) throw new Error("usuarioId não encontrado em req.user");
 
     const { id } = req.params;

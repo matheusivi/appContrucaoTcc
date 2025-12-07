@@ -49,29 +49,22 @@ async function buscarObrasPorId(id) {
 
 
 async function atualizarObras(id, data) {
-  const { nome, endereco, data_inicio, data_fim_prevista, responsavel_id, status, foto_url } = data;
+  const { nome, endereco, data_inicio, foto_url } = data;
 
   const obra = await prisma.obras.findUnique({ where: { id } });
   if (!obra) throw new Error('Obra não encontrada');
-
-  if (responsavel_id) {
-    const usuario = await prisma.usuarios.findUnique({ where: { id: responsavel_id } });
-    if (!usuario) throw new Error('Responsável não encontrado');
-  }
 
   return await prisma.obras.update({
     where: { id },
     data: {
       nome,
       endereco,
-      data_inicio: data_inicio ? new Date(data_inicio) : undefined,
-      data_fim_prevista: data_fim_prevista ? new Date(data_fim_prevista) : undefined,
-      responsavel_id,
-      status,
-      foto_url,
+      data_inicio: data_inicio ? new Date(data_inicio) : obra.data_inicio,
+      foto_url: foto_url !== undefined ? foto_url : obra.foto_url,
     },
   });
 }
+
 
 async function excluirObras(id) {
   const obra = await prisma.obras.findUnique({ where: { id } });
